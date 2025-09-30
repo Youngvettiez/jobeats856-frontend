@@ -6,28 +6,38 @@
     <title>JOBEATS856 NSPO</title>
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;700;900&display=swap');
-        body, html { 
-            margin: 0; 
-            padding: 0; 
-            height: 100%; 
-            overflow: hidden; 
-            font-family: 'Inter', sans-serif; 
+        
+        body, html {
+            margin: 0;
+            padding: 0;
+            height: 100%;
+            overflow: hidden;
+            font-family: 'Inter', sans-serif;
         }
-        #bg-video { 
-            position: fixed; 
-            right: 0; 
-            bottom: 0; 
-            min-width: 100%; 
-            min-height: 100%; 
-            z-index: -100; 
-            object-fit: cover; 
+
+        #bg-video {
+            position: fixed;
+            /* New centering technique */
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            /* Ensure it covers the screen */
+            min-width: 100%;
+            min-height: 100%;
+            width: auto;
+            height: auto;
+            /* Place it in the background */
+            z-index: -100;
+            object-fit: cover;
         }
-        .enter-container { 
-            display: flex; 
-            justify-content: center; 
-            align-items: center; 
-            height: 100%; 
+
+        .enter-container {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100%;
         }
+
         .enter-button {
             padding: 1rem 3rem;
             font-size: 1.25rem;
@@ -42,8 +52,9 @@
             transition: all 0.3s ease;
             text-shadow: 0 0 10px rgba(0,0,0,0.5);
         }
-        .enter-button:hover { 
-            background-color: rgba(255, 255, 255, 0.2); 
+
+        .enter-button:hover {
+            background-color: rgba(255, 255, 255, 0.2);
         }
     </style>
 </head>
@@ -56,3 +67,4 @@
     </div>
 </body>
 </html>
+
