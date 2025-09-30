@@ -1,0 +1,277 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Now Playing | JOBEATS856 NSPO</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #111827;
+        }
+        .player-card {
+            background-color: #1f2937;
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
+            position: relative;
+        }
+        .progress-bar-container { background-color: #374151; }
+        .progress-bar { background-color: #3b82f6; }
+        .control-button { transition: all 0.2s ease-in-out; }
+        .control-button:hover { transform: scale(1.1); }
+        .control-button:active { transform: scale(0.95); }
+        .active-mode {
+            color: #3b82f6;
+            background-color: rgba(59, 130, 246, 0.1);
+        }
+        #loading-overlay {
+            backdrop-filter: blur(4px);
+        }
+    </style>
+</head>
+<body class="flex items-center justify-center min-h-screen p-4">
+
+    <div id="music-player" class="player-card rounded-2xl p-6 sm:p-8 w-full max-w-md text-white">
+        <div id="loading-overlay" class="absolute inset-0 bg-gray-900 bg-opacity-75 flex items-center justify-center z-50 rounded-2xl">
+            <p id="loading-text" class="text-white text-xl">Loading album...</p>
+        </div>
+        
+        <div class="text-center mb-6">
+            <img id="cover-art" src="https://placehold.co/400x400/1f2937/9ca3af?text=JOBEATS856" alt="Album Art" class="w-48 h-48 sm:w-64 sm:h-64 rounded-xl mx-auto mb-6 shadow-lg">
+            <h2 id="song-title" class="text-2xl font-bold">Choose a Song</h2>
+            <p id="artist-name" class="text-md text-gray-400">JOBEATS856</p>
+        </div>
+
+        <div class="mb-6">
+            <div id="progress-container" class="progress-bar-container rounded-full h-2 cursor-pointer">
+                <div id="progress-bar" class="progress-bar h-2 rounded-full w-0"></div>
+            </div>
+            <div class="flex justify-between text-xs text-gray-400 mt-2">
+                <span id="current-time">0:00</span>
+                <span id="duration">0:00</span>
+            </div>
+        </div>
+
+        <div class="flex items-center justify-between">
+            <button id="shuffle-btn" class="control-button text-gray-400 hover:text-white text-xl w-12 h-12 flex items-center justify-center rounded-full">
+                <i class="fas fa-shuffle"></i>
+            </button>
+            <button id="prev-btn" class="control-button text-gray-400 hover:text-white text-2xl w-12 h-12 flex items-center justify-center">
+                <i class="fas fa-backward-step"></i>
+            </button>
+            <button id="play-btn" class="control-button text-white bg-blue-600 hover:bg-blue-500 w-20 h-20 rounded-full flex items-center justify-center text-3xl shadow-lg">
+                <i id="play-icon" class="fas fa-play"></i>
+            </button>
+            <button id="next-btn" class="control-button text-gray-400 hover:text-white text-2xl w-12 h-12 flex items-center justify-center">
+                <i class="fas fa-forward-step"></i>
+            </button>
+            <button id="repeat-btn" class="control-button text-gray-400 hover:text-white text-xl w-12 h-12 flex items-center justify-center rounded-full">
+                <i class="fas fa-repeat"></i>
+            </button>
+        </div>
+        
+        <div id="playlist" class="mt-8">
+            <h3 id="playlist-title" class="text-xl font-semibold mb-4 text-center">Album Tracks</h3>
+            <ul id="playlist-ul" class="space-y-3 max-h-40 overflow-y-auto">
+            </ul>
+        </div>
+    </div>
+
+    <audio id="audio" src="" crossorigin="anonymous"></audio>
+
+    <script>
+        // --- CONFIGURATION ---
+        const API_URL = 'https://jobeats856-backend-api.onrender.com'; // CRITICAL: DOUBLE-CHECK THIS
+
+        // --- DOM Elements ---
+        const loadingOverlay = document.getElementById('loading-overlay');
+        const loadingText = document.getElementById('loading-text');
+        const coverArt = document.getElementById('cover-art');
+        const songTitle = document.getElementById('song-title');
+        const artistName = document.getElementById('artist-name');
+        const audio = document.getElementById('audio');
+        const playBtn = document.getElementById('play-btn');
+        const playIcon = document.getElementById('play-icon');
+        const prevBtn = document.getElementById('prev-btn');
+        const nextBtn = document.getElementById('next-btn');
+        const progressContainer = document.getElementById('progress-container');
+        const progressBar = document.getElementById('progress-bar');
+        const currentTimeEl = document.getElementById('current-time');
+        const durationEl = document.getElementById('duration');
+        const playlistUl = document.getElementById('playlist-ul');
+        const playlistTitle = document.getElementById('playlist-title');
+        const shuffleBtn = document.getElementById('shuffle-btn');
+        const repeatBtn = document.getElementById('repeat-btn');
+
+        // --- State ---
+        let songs = []; // This will be filled by the API
+        let albumInfo = {}; // To store album cover and title
+        let songIndex = 0;
+        let isPlaying = false;
+        let isShuffle = false;
+        let repeatMode = 0; // 0: off, 1: repeat playlist, 2: repeat one song
+
+        // --- Core Functions ---
+        async function loadAndPlay(newIndex) {
+            if (songs.length === 0) return;
+            songIndex = newIndex;
+            const song = songs[songIndex];
+
+            songTitle.textContent = song.title;
+            artistName.textContent = song.artist;
+            coverArt.src = albumInfo.cover_art_url || 'https://placehold.co/400x400/1f2937/9ca3af?text=JOBEATS856';
+            
+            playIcon.classList.remove('fa-pause');
+            playIcon.classList.add('fa-play');
+            audio.src = ""; 
+            
+            try {
+                const res = await fetch(`${API_URL}/api/songs/${song.id}/stream`);
+                if (!res.ok) throw new Error('Network response was not ok for stream URL');
+                const data = await res.json();
+
+                audio.src = data.url;
+                audio.play();
+            } catch (error) {
+                console.error('Failed to load and play song:', error);
+                isPlaying = false;
+                alert('Error: Could not play the selected track.');
+            }
+        }
+
+        function pauseSong() {
+            isPlaying = false;
+            playIcon.classList.remove('fa-pause');
+            playIcon.classList.add('fa-play');
+            audio.pause();
+        }
+
+        function resumeSong() {
+            if (!audio.src) {
+                loadAndPlay(songIndex);
+            } else {
+                isPlaying = true;
+                playIcon.classList.remove('fa-play');
+                playIcon.classList.add('fa-pause');
+                audio.play();
+            }
+        }
+
+        function playPrevSong() {
+            let newIndex = isShuffle ? getRandomIndex() : (songIndex - 1 + songs.length) % songs.length;
+            loadAndPlay(newIndex);
+        }
+
+        function playNextSong() {
+            let newIndex = isShuffle ? getRandomIndex() : (songIndex + 1) % songs.length;
+            loadAndPlay(newIndex);
+        }
+
+        function getRandomIndex() {
+            let randomIndex;
+            if (songs.length <= 1) return 0;
+            do {
+                randomIndex = Math.floor(Math.random() * songs.length);
+            } while (randomIndex === songIndex);
+            return randomIndex;
+        }
+
+        // --- UI & Event Handlers ---
+        function handleSongEnd() {
+            if (repeatMode === 2) { // Repeat One Song
+                audio.currentTime = 0;
+                audio.play();
+            } else {
+                const isLastSong = songIndex === songs.length - 1;
+                if (!isLastSong || repeatMode === 1 || isShuffle) {
+                    playNextSong();
+                } else {
+                    pauseSong();
+                }
+            }
+        }
+        
+        playBtn.addEventListener('click', () => { (isPlaying) ? pauseSong() : resumeSong(); });
+        prevBtn.addEventListener('click', playPrevSong);
+        nextBtn.addEventListener('click', playNextSong);
+        shuffleBtn.addEventListener('click', toggleShuffle);
+        repeatBtn.addEventListener('click', toggleRepeat);
+        
+        audio.addEventListener('play', () => { isPlaying = true; playIcon.classList.remove('fa-play'); playIcon.classList.add('fa-pause'); });
+        audio.addEventListener('pause', () => { isPlaying = false; playIcon.classList.remove('fa-pause'); playIcon.classList.add('fa-play'); });
+        audio.addEventListener('error', (e) => { console.error("Audio playback failed:", e.target.error); pauseSong(); });
+        audio.addEventListener('timeupdate', updateProgress);
+        audio.addEventListener('ended', handleSongEnd);
+        progressContainer.addEventListener('click', setProgress);
+        
+        // --- Initialization ---
+        async function initPlayer() {
+            const params = new URLSearchParams(window.location.search);
+            const albumId = params.get('album');
+
+            if (!albumId) {
+                loadingText.innerHTML = `No album selected.<br><a href="/albums" class="text-blue-400 hover:underline">Go back to albums</a>`;
+                return;
+            }
+
+            try {
+                // Fetch both album info and songs at the same time
+                const [albumRes, songsRes] = await Promise.all([
+                    fetch(`${API_URL}/api/albums`), // A simple way to get the album info
+                    fetch(`${API_URL}/api/albums/${albumId}/songs`)
+                ]);
+
+                if (!albumRes.ok || !songsRes.ok) throw new Error('Failed to fetch album data');
+                
+                const allAlbums = await albumRes.json();
+                songs = await songsRes.json();
+                albumInfo = allAlbums.find(a => a.id == albumId);
+
+                if (songs.length > 0 && albumInfo) {
+                    playlistTitle.textContent = albumInfo.title;
+                    populatePlaylist();
+                    loadInitialSongMetadata();
+                } else {
+                   loadingText.textContent = "Album not found or is empty.";
+                }
+                loadingOverlay.style.display = 'none';
+
+            } catch (error) {
+                console.error("Player initialization failed:", error);
+                loadingText.innerHTML = `Failed to load album.<br><a href="/albums" class="text-blue-400 hover:underline">Go back to albums</a>`;
+            }
+        }
+        
+        function populatePlaylist() {
+            playlistUl.innerHTML = '';
+            songs.forEach((song, index) => {
+                const li = document.createElement('li');
+                li.className = 'p-3 rounded-lg hover:bg-gray-700 cursor-pointer flex justify-between items-center transition-colors';
+                li.innerHTML = `<span>${song.title}</span><span class="text-gray-400 text-sm">${song.artist}</span>`;
+                li.addEventListener('click', () => loadAndPlay(index));
+                playlistUl.appendChild(li);
+            });
+        }
+
+        function loadInitialSongMetadata() {
+            if (songs.length > 0) {
+                songTitle.textContent = songs[0].title;
+                artistName.textContent = songs[0].artist;
+                coverArt.src = albumInfo.cover_art_url;
+            }
+        }
+        
+        // Helper functions copied from your original player for consistency
+        function updateProgress(e){const{duration,currentTime}=e.srcElement;const progressPercent=(currentTime/duration)*100;progressBar.style.width=`${progressPercent}%`;durationEl.textContent=formatTime(duration);currentTimeEl.textContent=formatTime(currentTime);}
+        function setProgress(e){const width=this.clientWidth;const clickX=e.offsetX;const duration=audio.duration;if(duration){audio.currentTime=(clickX/width)*duration;}}
+        function formatTime(seconds){if(isNaN(seconds))return'0:00';const minutes=Math.floor(seconds/60);const secs=Math.floor(seconds%60);return`${minutes}:${secs<10?'0':''}${secs}`;}
+        function toggleShuffle(){isShuffle=!isShuffle;shuffleBtn.classList.toggle('active-mode',isShuffle);}
+        function toggleRepeat(){repeatMode=(repeatMode+1)%3;const icon=repeatBtn.querySelector('i');const indicator=document.getElementById('repeat-indicator');if(indicator)indicator.remove();switch(repeatMode){case 0:repeatBtn.classList.remove('active-mode');break;case 1:repeatBtn.classList.add('active-mode');break;case 2:repeatBtn.classList.add('active-mode');const ind=document.createElement('span');ind.id='repeat-indicator';ind.textContent='1';ind.style.cssText='font-size:10px;font-weight:bold;position:absolute;top:2px;right:2px;color:#3b82f6;user-select:none;';repeatBtn.style.position='relative';repeatBtn.appendChild(ind);break;}}
+
+        initPlayer();
+    </script>
+</body>
+</html>
+

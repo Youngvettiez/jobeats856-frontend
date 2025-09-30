@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Main Directory | JOBEATS856 NSPO</title>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;700;900&display=swap');
+        body, html { margin: 0; padding: 0; height: 100%; overflow: hidden; font-family: 'Inter', sans-serif; background-color: #000; }
+        #bg-video { position: fixed; right: 0; bottom: 0; min-width: 100%; min-height: 100%; z-index: -100; object-fit: cover; }
+        #main-view { position: absolute; top: 0; left: 0; width: 100%; height: 100%; display: flex; justify-content: center; align-items: center; background-color: rgba(0, 0, 0, 0.5); z-index: 1; }
+        .main-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 30px; padding: 20px; width: 90%; max-width: 900px; }
+        .main-thumbnail { width: 100%; aspect-ratio: 1 / 1; background-size: cover; background-position: center; border-radius: 12px; cursor: pointer; transition: transform 0.3s ease, box-shadow 0.3s ease; box-shadow: 0 10px 30px rgba(0,0,0,0.5); }
+        .main-thumbnail:hover { transform: scale(1.05); box-shadow: 0 15px 40px rgba(0,0,0,0.7); }
+        @media (max-width: 768px) { .main-grid { grid-template-columns: repeat(1, 1fr); max-width: 300px; } }
+    </style>
+</head>
+<body>
+    <video autoplay loop muted playsinline id="bg-video">
+        <source src="https://res.cloudinary.com/dtt7e36fd/video/upload/v1759177920/static_shot_with_pool_water_dp0cak.mp4" type="video/mp4">
+    </video>
+    <div id="main-view">
+        <div class="main-grid"></div>
+    </div>
+    <script>
+        const mainButtons = [
+            { id: 'albums',  coverUrl: 'https://res.cloudinary.com/dtt7e36fd/image/upload/v1757701780/SQUARE_2_qssfme.png' }, 
+            { id: 'artwork', coverUrl: 'https://res.cloudinary.com/dtt7e36fd/image/upload/v1759184452/Artworks_yzqtsn.jpg' },  
+        ];
+        const mainGrid = document.querySelector('.main-grid');
+        mainButtons.forEach(button => {
+            const thumbnail = document.createElement('div');
+            thumbnail.className = 'main-thumbnail';
+            thumbnail.style.backgroundImage = `url(${button.coverUrl})`;
+            thumbnail.addEventListener('click', () => { window.location.href = `/${button.id}`; });
+            mainGrid.appendChild(thumbnail);
+        });
+    </script>
+</body>
+</html>

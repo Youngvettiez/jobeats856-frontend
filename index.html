@@ -1,0 +1,37 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>JOBEATS856 NSPO</title>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;700;900&display=swap');
+        body, html { margin: 0; padding: 0; height: 100%; overflow: hidden; font-family: 'Inter', sans-serif; }
+        #bg-video { position: fixed; right: 0; bottom: 0; min-width: 100%; min-height: 100%; z-index: -100; object-fit: cover; }
+        .enter-container { display: flex; justify-content: center; align-items: center; height: 100%; }
+        .enter-button {
+            padding: 1rem 3rem;
+            font-size: 1.25rem;
+            font-weight: 700;
+            color: white;
+            background-color: transparent;
+            border: 2px solid white;
+            border-radius: 50px;
+            cursor: pointer;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            transition: all 0.3s ease;
+            text-shadow: 0 0 10px rgba(0,0,0,0.5);
+        }
+        .enter-button:hover { background-color: rgba(255, 255, 255, 0.2); }
+    </style>
+</head>
+<body>
+    <video autoplay loop muted playsinline id="bg-video">
+        <source src="https://res.cloudinary.com/dtt7e36fd/video/upload/v1759177920/static_shot_with_pool_water_dp0cak.mp4" type="video/mp4">
+    </video>
+    <div class="enter-container">
+        <button class="enter-button" onclick="window.location.href='/main'">ENTER</button>
+    </div>
+</body>
+</html>
