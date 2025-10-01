@@ -159,9 +159,16 @@
             }
         }
 
+        // --- NEW AND IMPROVED PREVIOUS SONG LOGIC ---
         function playPrevSong() {
-            let newIndex = isShuffle ? getRandomIndex() : (songIndex - 1 + songs.length) % songs.length;
-            loadAndPlay(newIndex);
+            // If the song has played for more than 3 seconds, restart it.
+            // Otherwise, go to the actual previous song.
+            if (audio.currentTime > 3) {
+                audio.currentTime = 0;
+            } else {
+                let newIndex = isShuffle ? getRandomIndex() : (songIndex - 1 + songs.length) % songs.length;
+                loadAndPlay(newIndex);
+            }
         }
 
         function playNextSong() {
@@ -217,9 +224,8 @@
             }
 
             try {
-                // Fetch both album info and songs at the same time
                 const [albumRes, songsRes] = await Promise.all([
-                    fetch(`${API_URL}/api/albums`), // A simple way to get the album info
+                    fetch(`${API_URL}/api/albums`),
                     fetch(`${API_URL}/api/albums/${albumId}/songs`)
                 ]);
 
@@ -228,7 +234,6 @@
                 const allAlbums = await albumRes.json();
                 songs = await songsRes.json();
 
-                // BUG FIX: Use strict equality and convert URL param to a number for reliable matching
                 albumInfo = allAlbums.find(a => a.id === parseInt(albumId, 10));
 
                 if (songs.length > 0 && albumInfo) {
@@ -265,15 +270,62 @@
             }
         }
         
-        // Helper functions copied from your original player for consistency
-        function updateProgress(e){const{duration,currentTime}=e.srcElement;const progressPercent=(currentTime/duration)*100;progressBar.style.width=`${progressPercent}%`;durationEl.textContent=formatTime(duration);currentTimeEl.textContent=formatTime(currentTime);}
-        function setProgress(e){const width=this.clientWidth;const clickX=e.offsetX;const duration=audio.duration;if(duration){audio.currentTime=(clickX/width)*duration;}}
-        function formatTime(seconds){if(isNaN(seconds))return'0:00';const minutes=Math.floor(seconds/60);const secs=Math.floor(seconds%60);return`${minutes}:${secs<10?'0':''}${secs}`;}
-        function toggleShuffle(){isShuffle=!isShuffle;shuffleBtn.classList.toggle('active-mode',isShuffle);}
-        function toggleRepeat(){repeatMode=(repeatMode+1)%3;const icon=repeatBtn.querySelector('i');const indicator=document.getElementById('repeat-indicator');if(indicator)indicator.remove();switch(repeatMode){case 0:repeatBtn.classList.remove('active-mode');break;case 1:repeatBtn.classList.add('active-mode');break;case 2:repeatBtn.classList.add('active-mode');const ind=document.createElement('span');ind.id='repeat-indicator';ind.textContent='1';ind.style.cssText='font-size:10px;font-weight:bold;position:absolute;top:2px;right:2px;color:#3b82f6;user-select:none;';repeatBtn.style.position='relative';repeatBtn.appendChild(ind);break;}}
+        // --- Helper Functions ---
+        function updateProgress(e) {
+            const { duration, currentTime } = e.srcElement;
+            const progressPercent = (currentTime / duration) * 100;
+            progressBar.style.width = `${progressPercent}%`;
+            durationEl.textContent = formatTime(duration);
+            currentTimeEl.textContent = formatTime(currentTime);
+        }
+
+        function setProgress(e) {
+            const width = this.clientWidth;
+            const clickX = e.offsetX;
+            const duration = audio.duration;
+            if (duration) {
+                audio.currentTime = (clickX / width) * duration;
+            }
+        }
+
+        function formatTime(seconds) {
+            if (isNaN(seconds)) return '0:00';
+            const minutes = Math.floor(seconds / 60);
+            const secs = Math.floor(seconds % 60);
+            return `${minutes}:${secs < 10 ? '0' : ''}${secs}`;
+        }
+
+        function toggleShuffle() {
+            isShuffle = !isShuffle;
+            shuffleBtn.classList.toggle('active-mode', isShuffle);
+        }
+
+        function toggleRepeat() {
+            repeatMode = (repeatMode + 1) % 3;
+            const icon = repeatBtn.querySelector('i');
+            const indicator = document.getElementById('repeat-indicator');
+            if (indicator) indicator.remove();
+            
+            switch (repeatMode) {
+                case 0:
+                    repeatBtn.classList.remove('active-mode');
+                    break;
+                case 1:
+                    repeatBtn.classList.add('active-mode');
+                    break;
+                case 2:
+                    repeatBtn.classList.add('active-mode');
+                    const ind = document.createElement('span');
+                    ind.id = 'repeat-indicator';
+                    ind.textContent = '1';
+                    ind.style.cssText = 'font-size:10px;font-weight:bold;position:absolute;top:2px;right:2px;color:#3b82f6;user-select:none;';
+                    repeatBtn.style.position = 'relative';
+                    repeatBtn.appendChild(ind);
+                    break;
+            }
+        }
 
         // --- Initialization ---
-        // CRITICAL FIX: Wait for the HTML document to be fully loaded before running the script.
         document.addEventListener('DOMContentLoaded', () => {
             initPlayer();
         });
