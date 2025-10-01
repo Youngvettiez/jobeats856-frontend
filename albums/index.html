@@ -99,7 +99,6 @@
 
     <script>
         // --- CONFIGURATION ---
-        // CRITICAL: Replace this with the URL of your deployed Render API
         const API_URL = 'https://jobeats856-backend-api.onrender.com'; 
 
         // --- DOM Elements ---
@@ -125,7 +124,6 @@
 
                     thumbnail.addEventListener('click', () => {
                         console.log(`Album with ID '${album.id}' was clicked.`);
-                        // Navigate to a new player page, passing the album ID in the URL
                         window.location.href = `/player?album=${album.id}`;
                     });
 
@@ -140,7 +138,11 @@
         }
 
         // --- Initialization ---
-        fetchAndDisplayAlbums();
+        // CRITICAL FIX: Wait for the HTML document to be fully loaded before running the script.
+        document.addEventListener('DOMContentLoaded', () => {
+            fetchAndDisplayAlbums();
+        });
     </script>
 </body>
 </html>
+
