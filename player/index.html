@@ -227,7 +227,9 @@
                 
                 const allAlbums = await albumRes.json();
                 songs = await songsRes.json();
-                albumInfo = allAlbums.find(a => a.id == albumId);
+
+                // BUG FIX: Use strict equality and convert URL param to a number for reliable matching
+                albumInfo = allAlbums.find(a => a.id === parseInt(albumId, 10));
 
                 if (songs.length > 0 && albumInfo) {
                     playlistTitle.textContent = albumInfo.title;
@@ -270,7 +272,11 @@
         function toggleShuffle(){isShuffle=!isShuffle;shuffleBtn.classList.toggle('active-mode',isShuffle);}
         function toggleRepeat(){repeatMode=(repeatMode+1)%3;const icon=repeatBtn.querySelector('i');const indicator=document.getElementById('repeat-indicator');if(indicator)indicator.remove();switch(repeatMode){case 0:repeatBtn.classList.remove('active-mode');break;case 1:repeatBtn.classList.add('active-mode');break;case 2:repeatBtn.classList.add('active-mode');const ind=document.createElement('span');ind.id='repeat-indicator';ind.textContent='1';ind.style.cssText='font-size:10px;font-weight:bold;position:absolute;top:2px;right:2px;color:#3b82f6;user-select:none;';repeatBtn.style.position='relative';repeatBtn.appendChild(ind);break;}}
 
-        initPlayer();
+        // --- Initialization ---
+        // CRITICAL FIX: Wait for the HTML document to be fully loaded before running the script.
+        document.addEventListener('DOMContentLoaded', () => {
+            initPlayer();
+        });
     </script>
 </body>
 </html>
